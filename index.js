@@ -21,23 +21,20 @@ getENVData();
 
 const fs = require("fs");
 
-const pathToFileOrDir = "./.env.local";
-const fileName = ".env.local";
-
-const checkWeatherFileExistsOrNot = () => {
+const checkWeatherFileExistsOrNot = (pathToFileOrDir) => {
   if (fs.existsSync(pathToFileOrDir)) {
     return true;
   }
   return false;
 };
 
-const createFile = () => {
+const createFile = (fileName) => {
   const createStream = fs.createWriteStream(".env.local");
   // createStream.end();
   return createStream;
 };
 
-const readFileContent = () => {
+const readFileContent = (fileName) => {
   fs.readFile(fileName, "utf8", function (err, data) {
     const allVariablesAndThereValue = data?.split("\n");
     const keyValuePairs = allVariablesAndThereValue.map((val) => {
@@ -63,12 +60,21 @@ const writeInFile = async (file) => {
   }
 };
 
+const addToGitIgnore = () => {
+  const filePath = "./.gitignore";
+  const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
+  if (isFilePresent) {
+  }
+};
+
 const readAndWriteFile = () => {
-  const isFilePresent = checkWeatherFileExistsOrNot();
+  const pathToFileOrDir = "./.env.local";
+  const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
   if (isFilePresent) {
     readFileContent();
   } else {
-    const file = createFile();
+    const fileName = ".env.local";
+    const file = createFile(fileName);
     writeInFile(file);
   }
 };
