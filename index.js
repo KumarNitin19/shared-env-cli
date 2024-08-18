@@ -36,3 +36,16 @@ const createFile = () => {
   createStream.end();
   return createStream;
 };
+
+const readFileContent = () => {
+  fs.readFile(fileName, "utf8", function (err, data) {
+    const allVariablesAndThereValue = data?.split("\n");
+    const keyValuePairs = allVariablesAndThereValue.map((val) => {
+      const keyAndValue = val.split("=");
+      return {
+        [keyAndValue[0]]: keyAndValue[1],
+      };
+    });
+    return keyValuePairs;
+  });
+};
