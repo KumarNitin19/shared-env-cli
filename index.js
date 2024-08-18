@@ -30,3 +30,9 @@ const checkWeatherFileExistsOrNot = () => {
   }
   return false;
 };
+
+const createFile = () => {
+  const createStream = fs.createWriteStream(".env.local");
+  createStream.end();
+  return createStream;
+};
