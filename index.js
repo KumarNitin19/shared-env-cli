@@ -49,3 +49,8 @@ const readFileContent = () => {
     return keyValuePairs;
   });
 };
+
+const writeInFile = (file) => {
+  file.write("Hi, JournalDEV Users. ");
+  file.write("Thank You.");
+};
