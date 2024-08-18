@@ -20,6 +20,7 @@ const getENVData = async () => {
 getENVData();
 
 const fs = require("fs");
+const fsAsync = require("node:fs/promises");
 
 const checkWeatherFileExistsOrNot = (pathToFileOrDir) => {
   if (fs.existsSync(pathToFileOrDir)) {
@@ -60,10 +61,26 @@ const writeInFile = async (file) => {
   }
 };
 
-const addToGitIgnore = () => {
-  const filePath = "./.gitignore";
+const readGitFle = async () => {
+  try {
+    let fileContent = await fsAsync.readFile(".gitignore", "utf-8");
+    return fileContent.split("\n");
+  } catch (error) {
+    console.log("Error: ", error);
+  }
+};
+
+const addToGitIgnore = async () => {
+  const pathToFileOrDir = "./.gitignore";
+  const fileName = ".gitignore";
   const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
   if (isFilePresent) {
+    const fileContent = await readGitFle();
+    if (fileContent.includes(fileName)) return;
+    fs.appendFile(fileName, "\n.env.local", function (err) {
+      if (err) throw err;
+      console.log("Saved!");
+    });
   }
 };
 
@@ -79,4 +96,4 @@ const readAndWriteFile = () => {
   }
 };
 
-readAndWriteFile();
+addToGitIgnore();
