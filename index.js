@@ -1,2 +1,6 @@
 #!/usr/bin/env node
-console.log("shared-env");
+
+const { initializeFirebaseApp } = require("./firebase");
+const { getDocs, collection, query } = require("firebase/firestore");
+
+initializeFirebaseApp();
