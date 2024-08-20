@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-
-require("dotenv").config();
 const { db } = require("./firebase");
 
 const getENVData = async () => {
