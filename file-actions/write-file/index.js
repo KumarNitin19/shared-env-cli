@@ -1,3 +1,4 @@
+// adding entries to the file
 const writeInFile = async (file) => {
   const dataToWrite = await getENVData();
   if (dataToWrite && dataToWrite[0].env_variables.length) {
@@ -11,6 +12,7 @@ const writeInFile = async (file) => {
   }
 };
 
+// creating/adding entries to the file
 const readAndWriteFile = () => {
   const pathToFileOrDir = "./.env.local";
   const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
