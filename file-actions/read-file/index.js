@@ -1,5 +1,6 @@
 const fs = require("fs");
 
+// reading a env file
 const readFileContent = (fileName) => {
   fs.readFile(fileName, "utf8", function (err, data) {
     const allVariablesAndThereValue = data?.split("\n");
@@ -13,6 +14,7 @@ const readFileContent = (fileName) => {
   });
 };
 
+// reading .gitignore file
 const readGitFle = async () => {
   try {
     let fileContent = await fsAsync.readFile(".gitignore", "utf-8");

@@ -1,3 +1,4 @@
+// add env file to .gitignore
 const addToGitIgnore = async () => {
   const pathToFileOrDir = "./.gitignore";
   const fileName = ".gitignore";
