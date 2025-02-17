@@ -1,20 +1,8 @@
 #!/usr/bin/env node
-
-// const getData = async () => {
-//   try {
-//     const resp = await fetch("http:127.0.0.1:7000/cli/get-env-varaibles/");
-//     const data = await resp.json();
-//     return data;
-//   } catch (error) {
-//     console.log("Error : ", error);
-//   }
-// };
-
-// getData();
-
-// getENVData();
-
 const readline = require("readline");
+const fetchGitHubSession = require("./git-actions/utils");
+const fetchENVVariableForProject = require("./query");
+const { readAndWriteFile } = require("./file-actions/write-file");
 
 // ANSI color codes for random colors
 const colors = [
@@ -44,15 +32,19 @@ function renderList(list, selectedIndex, colorMap) {
 }
 
 // Main function
-function startCLI() {
-  const options = ["Dev", "Prod", "QA", "Hot-fix"];
+async function startCLI() {
   let selectedIndex = 0;
+  const projectId = "0c515a83-2d3c-4ce1-8ba4-a8a2550faf73";
+  const envGroups = await fetchENVVariableForProject(projectId).then(
+    (res) => res
+  );
+  const groupNames = envGroups?.groups?.map((group) => group?.groupName);
 
   // Generate a random color for each item
-  const colorMap = options.map((_, index) => colors[index]);
+  const colorMap = groupNames.map((_, index) => colors[index]);
 
   // Render the initial list
-  renderList(options, selectedIndex, colorMap);
+  renderList(groupNames, selectedIndex, colorMap);
 
   // Set up keypress handling
   readline.emitKeypressEvents(process.stdin);
@@ -61,15 +53,21 @@ function startCLI() {
   process.stdin.on("keypress", (_, key) => {
     if (key.name === "up") {
       selectedIndex =
-        selectedIndex > 0 ? selectedIndex - 1 : options.length - 1;
-      renderList(options, selectedIndex, colorMap);
+        selectedIndex > 0 ? selectedIndex - 1 : groupNames.length - 1;
+      renderList(groupNames, selectedIndex, colorMap);
     } else if (key.name === "down") {
       selectedIndex =
-        selectedIndex < options.length - 1 ? selectedIndex + 1 : 0;
-      renderList(options, selectedIndex, colorMap);
+        selectedIndex < groupNames.length - 1 ? selectedIndex + 1 : 0;
+      renderList(groupNames, selectedIndex, colorMap);
     } else if (key.name === "return") {
       console.clear();
-      console.log(`You selected: ${options[selectedIndex]}`);
+      console.log(`You selected: ${groupNames[selectedIndex]}`);
+      const selectedENV = envGroups?.groups?.find(
+        (group) => group?.groupName === groupNames[selectedIndex]
+      );
+      const variables = selectedENV?.variables;
+      readAndWriteFile(variables);
+      console.log("Successfully created env.");
       process.stdin.setRawMode(false);
       process.stdin.pause();
     } else if (key.ctrl && key.name === "c") {
@@ -80,22 +78,6 @@ function startCLI() {
   });
 }
 
+fetchGitHubSession();
 // Start the CLI tool
 startCLI();
-
-// Fetch user GitHub session
-// const fetchGitHubSession = () => {
-//   try {
-//     const githubUsername = execSync("git config user.email").toString().trim();
-//     if (!githubUsername) {
-//       console.error("GitHub session not found. Please login via GitHub.");
-//       process.exit(1);
-//     }
-//     return githubUsername;
-//   } catch (error) {
-//     console.error("Error fetching GitHub session:", error.message);
-//     process.exit(1);
-//   }
-// };
-
-// console.log(fetchGitHubSession());
