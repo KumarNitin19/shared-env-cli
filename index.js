@@ -48,7 +48,7 @@ async function startCLI() {
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
 
-    process.stdin.on("keypress", (_, key) => {
+    process.stdin.on("keypress", async (_, key) => {
       if (key.name === "up") {
         selectedIndex =
           selectedIndex > 0 ? selectedIndex - 1 : groupNames.length - 1;
@@ -64,7 +64,7 @@ async function startCLI() {
           (group) => group?.groupName === groupNames[selectedIndex]
         );
         const variables = selectedENV?.variables;
-        readAndWriteFile(variables);
+        await readAndWriteFile(variables);
         console.log("Successfully added env variables.");
         process.stdin.setRawMode(false);
         process.stdin.pause();
