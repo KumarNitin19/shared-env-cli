@@ -4,12 +4,16 @@ const fs = require("fs");
 const readFileContent = (fileName) => {
   fs.readFile(fileName, "utf8", function (err, data) {
     const allVariablesAndThereValue = data?.split("\n");
-    const keyValuePairs = allVariablesAndThereValue.map((val) => {
-      const keyAndValue = val.split("=");
-      return {
-        [keyAndValue[0]]: keyAndValue[1],
-      };
-    });
+    const keyValuePairs = allVariablesAndThereValue
+      .filter((val) => val)
+      .map((val) => {
+        const keyAndValue = val.split("=");
+        if (keyAndValue[0] && keyAndValue[1]) {
+          return {
+            [keyAndValue[0]]: keyAndValue[1],
+          };
+        }
+      });
     return keyValuePairs;
   });
 };
