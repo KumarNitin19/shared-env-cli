@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const { execSync } = require("child_process");
 // Fetch user GitHub session
 const fetchGitHubSession = () => {
@@ -15,4 +18,14 @@ const fetchGitHubSession = () => {
   }
 };
 
-module.exports = fetchGitHubSession;
+const checkWeatherFileExistsOrNot = (pathname) => {
+  const filePath = path.join(__dirname, pathname); // Change to the file you want to check
+
+  if (fs.existsSync(filePath)) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+module.exports = { fetchGitHubSession, checkWeatherFileExistsOrNot };
