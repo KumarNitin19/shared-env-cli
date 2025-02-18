@@ -1,3 +1,4 @@
+const { checkWeatherFileExistsOrNot } = require("../../git-actions/utils");
 const createFile = require("../create-file");
 const { readFileContent } = require("../read-file");
 
@@ -16,15 +17,16 @@ const writeInFile = async (file, env_variables) => {
 
 // creating/adding entries to the file
 const readAndWriteFile = (env_variables) => {
-  const pathToFileOrDir = "./.env.local";
-  // const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
-  // if (isFilePresent) {
-  //   readFileContent();
-  // } else {
-  const fileName = ".env.local";
-  const file = createFile(fileName);
-  writeInFile(file, env_variables);
-  // }
+  const pathToFileOrDir = "../../.env.local";
+  const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
+  if (isFilePresent) {
+    readFileContent();
+  } else {
+    console.log("called");
+    const fileName = ".env.local";
+    const file = createFile(fileName);
+    writeInFile(file, env_variables);
+  }
 };
 
 module.exports = { writeInFile, readAndWriteFile };
