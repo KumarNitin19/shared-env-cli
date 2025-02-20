@@ -1,6 +1,12 @@
+const { fetchGitHubSession } = require("./git-actions/utils");
+
 const fetchENVVariableForProject = async (projectId) => {
   try {
-    const resp = await fetch(`http:127.0.0.1:7000/api/v1/groups/${projectId}`);
+    const githubUserName = fetchGitHubSession();
+    const resp = await fetch(
+      `http:127.0.0.1:7000/cli/groups/${projectId}/${githubUserName}`
+    );
+    console.log(resp);
     const data = await resp.json();
     return data;
   } catch (error) {

@@ -2,7 +2,6 @@
 const readline = require("readline");
 const fetchENVVariableForProject = require("./query");
 const { readAndWriteFile } = require("./file-actions/write-file");
-const { fetchGitHubSession } = require("./git-actions/utils");
 
 // ANSI color codes for random colors
 const colors = [
@@ -77,6 +76,5 @@ async function startCLI() {
   }
 }
 
-fetchGitHubSession();
 // Start the CLI tool
 startCLI();
