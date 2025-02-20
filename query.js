@@ -1,16 +1,32 @@
-const { fetchGitHubSession } = require("./git-actions/utils");
+const {
+  fetchGitHubSession,
+  startSpinner,
+  stopSpinner,
+} = require("./git-actions/utils");
 
 const fetchENVVariableForProject = async (projectId) => {
+  console.log("\nChecking GitHub authorization...\n"); // Add space before starting
+  const githubUserName = fetchGitHubSession();
+  if (!githubUserName) {
+    stopSpinner(spinner, "User not logged-in to github!!", false);
+  }
+  const spinner = startSpinner("Authenticating...");
   try {
-    const githubUserName = fetchGitHubSession();
     const resp = await fetch(
-      `http:127.0.0.1:7000/cli/groups/${projectId}/${githubUserName}`
+      `http:127.0.0.1:7000/cli/groups/${githubUserName}/${projectId}`
     );
-    console.log(resp);
+
     const data = await resp.json();
+
+    if (data?.error) {
+      stopSpinner(spinner, data.error, false);
+      return;
+    }
+    stopSpinner(spinner, "Successfully fetched env variables!!");
     return data;
   } catch (error) {
-    console.log("Error : ", error);
+    // console.log("Error : ", error);
+    stopSpinner(spinner, "Error fetching!", false);
   }
 };
 
