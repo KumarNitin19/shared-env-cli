@@ -34,7 +34,7 @@ function renderList(list, selectedIndex, colorMap) {
 // Main function
 async function startCLI() {
   let selectedIndex = 0;
-  const projectDetails = getProjectId();
+  const projectDetails = await getProjectId();
   const envGroups = await fetchENVVariableForProject(projectDetails?.projectId);
   const groupNames = envGroups?.groups?.map((group) => group?.groupName);
   if (groupNames?.length) {

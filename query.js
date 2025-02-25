@@ -13,7 +13,7 @@ const fetchENVVariableForProject = async (projectId) => {
   const spinner = startSpinner("Authenticating...");
   try {
     const resp = await fetch(
-      `http:127.0.0.1:7000/cli/groups/${githubUserName}/${projectId}`
+      `http:127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}`
     );
 
     const data = await resp.json();

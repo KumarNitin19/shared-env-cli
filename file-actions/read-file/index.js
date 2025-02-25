@@ -5,17 +5,19 @@ const path = require("path");
 // reading a env file
 const readFileContent = async (fileName) => {
   try {
-    const data = await fsAsync.readFile(fileName, "utf8");
-    const keyValuePairs = data
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => {
-        const [key, value] = line.split("=");
-        return key && value ? { [key.trim()]: value.trim() } : null;
-      })
-      .filter(Boolean);
+    const data = await fsAsync?.readFile(fileName, "utf8");
+    if (data) {
+      const keyValuePairs = data
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line) => {
+          const [key, value] = line.split("=");
+          return key && value ? { [key.trim()]: value.trim() } : null;
+        })
+        .filter(Boolean);
 
-    return keyValuePairs;
+      return keyValuePairs;
+    }
   } catch (err) {
     console.error("Error reading file:", err);
     return [];
