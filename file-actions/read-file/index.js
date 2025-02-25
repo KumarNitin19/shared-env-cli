@@ -1,9 +1,11 @@
 const fs = require("fs").promises;
+const fsAsync = fs.promises;
+const path = require("path");
 
 // reading a env file
 const readFileContent = async (fileName) => {
   try {
-    const data = await fs.readFile(fileName, "utf8");
+    const data = await fsAsync.readFile(fileName, "utf8");
     const keyValuePairs = data
       .split("\n")
       .filter((line) => line.trim())
@@ -33,8 +35,10 @@ const readGitFle = async () => {
 // reading varVault.json file to retrieve projectId
 const getProjectId = async () => {
   try {
-    let fileContent = await fsAsync.readFile("varVault.json", "utf-8");
-    return fileContent.split("\n");
+    const filePath = path.join(process.cwd(), "varVault.json"); // Get file path from the calling project
+    const data = await fs.readFile(filePath, "utf8"); // Read file
+    const jsonData = JSON.parse(data); // Parse JSON
+    return jsonData;
   } catch (error) {
     console.log("Error: ", error);
   }
