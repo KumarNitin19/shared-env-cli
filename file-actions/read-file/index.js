@@ -5,7 +5,7 @@ const path = require("path");
 // reading a env file
 const readFileContent = async (fileName) => {
   try {
-    const data = await fsAsync?.readFile(fileName, "utf8");
+    const data = await fs?.readFile(fileName, "utf8");
     if (data) {
       const keyValuePairs = data
         .split("\n")

@@ -3,9 +3,23 @@ const createFile = require("../create-file");
 const { readFileContent } = require("../read-file");
 
 // adding entries to the file
-const writeInFile = async (file, env_variables) => {
-  if (env_variables?.length) {
-    env_variables.map((variable) => {
+const writeInFile = async (file, old_variables, new_variables) => {
+  if (old_variables?.length) {
+    old_variables.map((variable) => {
+      const objKey = Object.keys(variable)[0];
+      file.write(
+        `${new_variables?.length > 0 ? "//  " : ""} ${objKey}=${
+          variable[objKey]
+        }\n`
+      );
+    });
+  }
+  if (new_variables?.length) {
+    if (old_variables?.length) {
+      file.write("\n \n \n");
+      file.write("// New Variables \n");
+    }
+    new_variables.map((variable) => {
       const objKey = Object.keys(variable)[0];
       file.write(`${objKey}=${variable[objKey]}\n`);
     });
@@ -25,11 +39,11 @@ const readAndWriteFile = async (env_variables) => {
     const variables = await readFileContent(fileName);
     const file = createFile(fileName);
     if (variables?.length) {
-      writeInFile(file, variables);
-    } else writeInFile(file, env_variables);
+      writeInFile(file, variables, env_variables);
+    } else writeInFile(file, [], env_variables);
   } else {
     const file = createFile(fileName);
-    writeInFile(file, env_variables);
+    writeInFile(file, [], env_variables);
   }
 };
 
