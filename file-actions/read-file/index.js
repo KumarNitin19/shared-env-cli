@@ -30,4 +30,14 @@ const readGitFle = async () => {
   }
 };
 
-module.exports = { readFileContent, readGitFle };
+// reading varVault.json file to retrieve projectId
+const getProjectId = async () => {
+  try {
+    let fileContent = await fsAsync.readFile("varVault.json", "utf-8");
+    return fileContent.split("\n");
+  } catch (error) {
+    console.log("Error: ", error);
+  }
+};
+
+module.exports = { readFileContent, readGitFle, getProjectId };
