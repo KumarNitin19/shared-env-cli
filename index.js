@@ -2,6 +2,7 @@
 const readline = require("readline");
 const fetchENVVariableForProject = require("./query");
 const { readAndWriteFile } = require("./file-actions/write-file");
+const { getProjectId } = require("./file-actions/read-file");
 
 // ANSI color codes for random colors
 const colors = [
@@ -33,8 +34,8 @@ function renderList(list, selectedIndex, colorMap) {
 // Main function
 async function startCLI() {
   let selectedIndex = 0;
-  const projectId = "0c515a83-2d3c-4ce1-8ba4-a8a2550faf73";
-  const envGroups = await fetchENVVariableForProject(projectId);
+  const projectDetails = getProjectId();
+  const envGroups = await fetchENVVariableForProject(projectDetails?.projectId);
   const groupNames = envGroups?.groups?.map((group) => group?.groupName);
   if (groupNames?.length) {
     // Generate a random color for each item
