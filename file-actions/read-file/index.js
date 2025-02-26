@@ -25,7 +25,7 @@ const readFileContent = async (fileName) => {
 };
 
 // reading .gitignore file
-const readGitFle = async () => {
+const readGitFile = async () => {
   try {
     let fileContent = await fsAsync.readFile(".gitignore", "utf-8");
     return fileContent.split("\n");
@@ -46,4 +46,4 @@ const getProjectId = async () => {
   }
 };
 
-module.exports = { readFileContent, readGitFle, getProjectId };
+module.exports = { readFileContent, readGitFile, getProjectId };
