@@ -1,3 +1,4 @@
+const addToGitIgnore = require("../../git-actions/add-to-git-ignore");
 const { checkWeatherFileExistsOrNot } = require("../../git-actions/utils");
 const createFile = require("../create-file");
 const { readFileContent } = require("../read-file");
@@ -43,6 +44,7 @@ const readAndWriteFile = async (env_variables) => {
     } else writeInFile(file, [], env_variables);
   } else {
     const file = createFile(fileName);
+    addToGitIgnore();
     writeInFile(file, [], env_variables);
   }
 };
