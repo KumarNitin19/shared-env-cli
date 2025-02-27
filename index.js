@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 const readline = require("readline");
-const fetchENVVariableForProject = require("./query");
-const { readAndWriteFile } = require("./file-actions/write-file");
-const { getProjectId } = require("./file-actions/read-file");
 const fs = require("fs");
 const fsAsync = fs.promises;
 const path = require("path");
+const { execSync } = require("child_process");
 
 // Constants
 
@@ -149,8 +147,8 @@ const readGitFile = async () => {
 // 3. reading varVault.json file to retrieve projectId
 const getProjectId = async () => {
   try {
-    const filePath = path.join(process.cwd(), "varVault.json"); // Get file path from the calling project
-    const data = await fs.readFile(filePath, "utf8"); // Read file
+    // const filePath = path.join(process.cwd(), "varVault.json"); // Get file path from the calling project
+    const data = await fsAsync.readFile("varVault.json", "utf8"); // Read file
     const jsonData = JSON.parse(data); // Parse JSON
     return jsonData;
   } catch (error) {
