@@ -48,6 +48,7 @@ const fetchGitHubSession = () => {
   }
 };
 
+// Check whether the env file is present or not
 const checkWeatherFileExistsOrNot = (pathname) => {
   const filePath = path.join(__dirname, pathname); // Change to the file you want to check
 
@@ -58,6 +59,7 @@ const checkWeatherFileExistsOrNot = (pathname) => {
   }
 };
 
+// Loading state enable
 const startSpinner = (message) => {
   process.stdout.write("\n");
   process.stdout.write("\x1B[?25l"); // Hide cursor
@@ -70,11 +72,39 @@ const startSpinner = (message) => {
   }, 100);
 };
 
+// Loading state diable
 const stopSpinner = (spinner, message, isSuccess = true) => {
   clearInterval(spinner);
   process.stdout.write(`${moveCursorToStart}${clearLine}`); // Clear the spinner line
   console.log(`${isSuccess ? "✅" : "❌"} ${message}\n`); // Print success/failure message
   process.stdout.write("\x1B[?25h"); // Show cursor
+};
+
+// Fetch projects
+const fetchENVVariableForProject = async (projectId) => {
+  console.log("\nChecking GitHub authorization...\n"); // Add space before starting
+  const githubUserName = fetchGitHubSession();
+  if (!githubUserName) {
+    stopSpinner(spinner, "User not logged-in to github!!", false);
+  }
+  const spinner = startSpinner("Authenticating...");
+  try {
+    const resp = await fetch(
+      `http:127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}`
+    );
+
+    const data = await resp.json();
+
+    if (data?.error) {
+      stopSpinner(spinner, data.error, false);
+      return;
+    }
+    stopSpinner(spinner, "Successfully fetched env variables!!");
+    return data;
+  } catch (error) {
+    // console.log("Error : ", error);
+    stopSpinner(spinner, "Error fetching!", false);
+  }
 };
 
 // Creating a file if it doesn't exist
