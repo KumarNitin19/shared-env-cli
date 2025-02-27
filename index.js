@@ -4,6 +4,8 @@ const fetchENVVariableForProject = require("./query");
 const { readAndWriteFile } = require("./file-actions/write-file");
 const { getProjectId } = require("./file-actions/read-file");
 const fs = require("fs");
+const fsAsync = fs.promises;
+const path = require("path");
 
 // Constants
 
@@ -21,10 +23,54 @@ const colors = [
 const resetColor = "\x1b[0m";
 
 // Creating a file if it doesn't exist
-
 const createFile = (fileName) => {
   const createStream = fs.createWriteStream(fileName);
   return createStream;
+};
+
+// FILE: Read actions
+// reading a env file
+const readFileContent = async (fileName) => {
+  try {
+    const data = await fs?.readFile(fileName, "utf8");
+    if (data) {
+      const keyValuePairs = data
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line) => {
+          const [key, value] = line.split("=");
+          return key && value ? { [key.trim()]: value.trim() } : null;
+        })
+        .filter(Boolean);
+
+      return keyValuePairs;
+    }
+  } catch (err) {
+    // console.error("Error reading file:", err);
+    return [];
+  }
+};
+
+// reading .gitignore file
+const readGitFile = async () => {
+  try {
+    let fileContent = await fsAsync.readFile(".gitignore", "utf-8");
+    return fileContent.split("\n");
+  } catch (error) {
+    console.log("Error: ", error);
+  }
+};
+
+// reading varVault.json file to retrieve projectId
+const getProjectId = async () => {
+  try {
+    const filePath = path.join(process.cwd(), "varVault.json"); // Get file path from the calling project
+    const data = await fs.readFile(filePath, "utf8"); // Read file
+    const jsonData = JSON.parse(data); // Parse JSON
+    return jsonData;
+  } catch (error) {
+    console.log("Error: ", error);
+  }
 };
 
 // Function to render the list with random colors
