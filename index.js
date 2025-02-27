@@ -3,6 +3,9 @@ const readline = require("readline");
 const fetchENVVariableForProject = require("./query");
 const { readAndWriteFile } = require("./file-actions/write-file");
 const { getProjectId } = require("./file-actions/read-file");
+const fs = require("fs");
+
+// Constants
 
 // ANSI color codes for random colors
 const colors = [
@@ -16,6 +19,13 @@ const colors = [
 
 // Reset color
 const resetColor = "\x1b[0m";
+
+// Creating a file if it doesn't exist
+
+const createFile = (fileName) => {
+  const createStream = fs.createWriteStream(fileName);
+  return createStream;
+};
 
 // Function to render the list with random colors
 function renderList(list, selectedIndex, colorMap) {
