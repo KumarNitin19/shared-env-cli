@@ -1,266 +1,242 @@
 #!/usr/bin/env node
-const readline = require("readline");
-const fs = require("fs");
-const fsAsync = fs.promises;
-const path = require("path");
-const { execSync } = require("child_process");
 
-// Constants
+const readline = require("readline"),
+  fs = require("fs"),
+  fsAsync = fs.promises,
+  path = require("path"),
+  { execSync } = require("child_process");
 
-// ANSI color codes for random colors
+// ANSI color codes for UI enhancement
 const colors = [
-  "\x1b[36m", // Cyan
-  "\x1b[31m", // Red
-  "\x1b[32m", // Green
-  "\x1b[33m", // Yellow
-  "\x1b[34m", // Blue
-  "\x1b[35m", // Magenta
+  "\x1b[36m",
+  "\x1b[31m",
+  "\x1b[32m",
+  "\x1b[33m",
+  "\x1b[34m",
+  "\x1b[35m",
 ];
-
-// Reset color
 const resetColor = "\x1b[0m";
 
-// Spinner
+// For getting selected env variables group name
+let selectedIndex = 0;
+
+// To store all the available groups
+let groupNames = [];
+
+// Spinner animation frames
 const spinnerFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 let spinnerIndex = 0;
 
-const blue = "\x1b[34m"; // Blue color
-const reset = "\x1b[0m"; // Reset color
-const clearLine = "\x1b[2K"; // Clears the current line
-const moveCursorToStart = "\r";
-
-// Utility Functions
-
-// Fetch user GitHub session
+/**
+ * Fetches the logged-in GitHub username
+ */
 const fetchGitHubSession = () => {
   try {
-    const githubUsername = execSync("git config user.name").toString().trim();
-    if (!githubUsername) {
-      console.error("GitHub session not found. Please login via GitHub.");
-      process.exit(1);
-    }
-    return githubUsername;
-  } catch (error) {
-    console.error("Error fetching GitHub session:", error.message);
+    return execSync("git config user.name").toString().trim();
+  } catch {
+    console.error("GitHub session not found. Please login.");
     process.exit(1);
   }
 };
 
-// Check whether the env file is present or not
-const checkWeatherFileExistsOrNot = (pathname) => {
-  const filePath = path.join(__dirname, pathname); // Change to the file you want to check
-
-  if (fs.existsSync(filePath)) {
-    return true;
-  } else {
-    return false;
-  }
+/**
+ * Checks if a file exists in the current directory
+ */
+const checkFileExists = (relativePath) => {
+  const absolutePath = path.resolve(process.cwd(), relativePath);
+  return fs.existsSync(absolutePath);
 };
 
-// Loading state enable
-const startSpinner = (message) => {
-  process.stdout.write("\n");
-  process.stdout.write("\x1B[?25l"); // Hide cursor
-
+/**
+ * Starts a CLI spinner animation for loading states
+ */
+const startSpinner = (msg) => {
+  process.stdout.write("\n\x1B[?25l"); // Hide cursor
   return setInterval(() => {
     process.stdout.write(
-      `${moveCursorToStart}${clearLine}${blue}${spinnerFrames[spinnerIndex]} ${message}  ${reset}`
+      `\r\x1b[34m${spinnerFrames[spinnerIndex]} ${msg} \x1b[0m`
     );
     spinnerIndex = (spinnerIndex + 1) % spinnerFrames.length;
   }, 100);
 };
 
-// Loading state diable
-const stopSpinner = (spinner, message, isSuccess = true) => {
+/**
+ * Stops the spinner and displays a success/failure message
+ */
+const stopSpinner = (spinner, msg, success = true) => {
   clearInterval(spinner);
-  process.stdout.write(`${moveCursorToStart}${clearLine}`); // Clear the spinner line
-  console.log(`${isSuccess ? "✅" : "❌"} ${message}\n`); // Print success/failure message
-  process.stdout.write("\x1B[?25h"); // Show cursor
+  console.log(`\r\x1b[2K${success ? "✅" : "❌"} ${msg}\n\x1B[?25h`); // Show cursor
 };
 
-// Fetch projects
+/**
+ * Fetches environment variables from a local API based on the project ID
+ */
 const fetchENVVariableForProject = async (projectId) => {
-  console.log("\nChecking GitHub authorization...\n"); // Add space before starting
+  console.log("\nChecking GitHub authorization...");
   const githubUserName = fetchGitHubSession();
-  if (!githubUserName) {
-    stopSpinner(spinner, "User not logged-in to github!!", false);
-  }
   const spinner = startSpinner("Authenticating...");
   try {
     const resp = await fetch(
-      `http:127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}`
+      `http://127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}`
     );
-
     const data = await resp.json();
-
-    if (data?.error) {
-      stopSpinner(spinner, data.error, false);
-      return;
-    }
-    stopSpinner(spinner, "Successfully fetched env variables!!");
+    stopSpinner(
+      spinner,
+      data?.error || "Successfully fetched env variables!",
+      !data?.error
+    );
     return data;
-  } catch (error) {
-    // console.log("Error : ", error);
+  } catch {
     stopSpinner(spinner, "Error fetching!", false);
   }
 };
 
-// Creating a file if it doesn't exist
-const createFile = (fileName) => {
-  const createStream = fs.createWriteStream(fileName);
-  return createStream;
-};
-
-// FILE: read actions
-// 1. reading a env file
+/**
+ * Reads and parses a given file into key-value pairs
+ */
 const readFileContent = async (fileName) => {
   try {
-    const data = await fs?.readFile(fileName, "utf8");
-    if (data) {
-      const keyValuePairs = data
-        .split("\n")
-        .filter((line) => line.trim())
-        .map((line) => {
-          const [key, value] = line.split("=");
-          return key && value ? { [key.trim()]: value.trim() } : null;
-        })
-        .filter(Boolean);
-
-      return keyValuePairs;
-    }
-  } catch (err) {
-    // console.error("Error reading file:", err);
+    const data = await fsAsync.readFile(fileName, "utf8");
+    return data
+      ? data
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [key, value] = line.split("=");
+            return key && value ? { [key.trim()]: value.trim() } : null;
+          })
+          .filter(Boolean)
+      : [];
+  } catch {
     return [];
   }
 };
 
-// 2. reading .gitignore file
+/**
+ * Reads the `.gitignore` file content
+ */
 const readGitFile = async () => {
   try {
-    let fileContent = await fsAsync.readFile(".gitignore", "utf-8");
-    return fileContent.split("\n");
+    return (await fsAsync.readFile(".gitignore", "utf-8")).split("\n");
   } catch (error) {
-    console.log("Error: ", error);
+    console.log("Error:", error);
   }
 };
 
-// 3. reading varVault.json file to retrieve projectId
+/**
+ * Reads and parses the `varVault.json` file to retrieve the project ID
+ */
 const getProjectId = async () => {
   try {
-    // const filePath = path.join(process.cwd(), "varVault.json"); // Get file path from the calling project
-    const data = await fsAsync.readFile("varVault.json", "utf8"); // Read file
-    const jsonData = JSON.parse(data); // Parse JSON
-    return jsonData;
+    return JSON.parse(await fsAsync.readFile("varVault.json", "utf8"));
   } catch (error) {
-    console.log("Error: ", error);
+    console.log("Error:", error);
   }
 };
 
-// FILE: write actions
-
-const writeInFile = async (file, old_variables, new_variables) => {
-  if (old_variables?.length) {
-    old_variables.map((variable) => {
-      const objKey = Object.keys(variable)[0];
-      file.write(
-        `${new_variables?.length > 0 ? "//  " : ""} ${objKey}=${
-          variable[objKey]
-        }\n`
-      );
+/**
+ * Writes old and new environment variables to the `.env` file
+ */
+const writeInFile = async (file, oldVars, newVars) => {
+  // Write old variables (if present)
+  if (oldVars?.length) {
+    oldVars.forEach((variable) => {
+      const key = Object.keys(variable)[0];
+      file.write(`${newVars?.length ? "#  " : ""}${key}=${variable[key]}\n`);
     });
   }
-  if (new_variables?.length) {
-    if (old_variables?.length) {
-      file.write("\n \n \n");
-      file.write("// New Variables \n");
+
+  // Write new variables (if present)
+  if (newVars?.length) {
+    if (oldVars?.length) {
+      file.write(`\n\n\n# New ${groupNames[selectedIndex] || ""} Variables\n`);
     }
-    new_variables.map((variable) => {
-      const objKey = Object.keys(variable)[0];
-      file.write(`${objKey}=${variable[objKey]}\n`);
+    newVars.forEach((variable) => {
+      const key = Object.keys(variable)[0];
+      file.write(`${key}=${variable[key]}\n`);
     });
+
     file.end();
   } else {
     console.log("No variables found");
   }
 };
 
-// creating/adding entries to the file
-const readAndWriteFile = async (env_variables) => {
-  const pathToFileOrDir = "../.env";
-  const fileName = ".env";
-  const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
-  await readFileContent(fileName);
-  if (isFilePresent) {
-    const variables = await readFileContent(fileName);
-    const file = createFile(fileName);
-    if (variables?.length) {
-      writeInFile(file, variables, env_variables);
-    } else writeInFile(file, [], env_variables);
-  } else {
-    const file = createFile(fileName);
-    addToGitIgnore();
-    writeInFile(file, [], env_variables);
-  }
+/**
+ * Creates a new file in the current directory
+ */
+const createFile = (fileName) => fs.createWriteStream(fileName);
+
+/**
+ * Reads and updates the `.env` file with new variables
+ */
+const readAndWriteFile = async (envVars) => {
+  const fileName = ".env",
+    fileExists = checkFileExists(fileName),
+    variables = fileExists ? await readFileContent(fileName) : [];
+  const file = createFile(fileName);
+  if (!fileExists) addToGitIgnore();
+  writeInFile(file, variables, envVars);
 };
 
-// Git-Actions
-
+/**
+ * Adds `.env` and `varVault.json` to `.gitignore` to prevent accidental commits
+ */
 const addToGitIgnore = async () => {
-  const pathToFileOrDir = "../.gitignore";
-  const fileName = ".gitignore";
-  const isFilePresent = checkWeatherFileExistsOrNot(pathToFileOrDir);
-  if (isFilePresent) {
-    const fileContent = await readGitFile();
-    if (fileContent.includes(fileName)) return;
-    fs.appendFile(fileName, "\n.env \nvarVault.json", function (err) {
-      if (err) throw err;
-    });
-  } else {
-    fs.appendFile(fileName, ".env\nvarVault.json", function (err) {
-      if (err) throw err;
-    });
-  }
+  const fileName = ".gitignore",
+    exists = checkFileExists(fileName),
+    fileContent = exists ? await readGitFile() : [];
+  if (!fileContent.includes(fileName))
+    fs.appendFile(
+      fileName,
+      "\n.env \nvarVault.json",
+      (err) => err && console.error(err)
+    );
 };
 
-// Function to render the list with random colors
-function renderList(list, selectedIndex, colorMap) {
+/**
+ * Renders the list of environment groups with color-coded options
+ */
+const renderList = (list, selectedIndex, colorMap) => {
   console.clear();
   console.log("Use Up/Down arrows to navigate and press Enter to select:\n");
-  list.forEach((item, index) => {
-    const color = colorMap[index];
-    if (index === selectedIndex) {
-      console.log(`${color}-> ${item}${resetColor}`); // Highlight the selected item
-    } else {
-      console.log(`${color}   ${item}${resetColor}`); // Normal unselected item
-    }
-  });
-}
+  list.forEach((item, index) =>
+    console.log(
+      `${colorMap[index]}${
+        index === selectedIndex ? "->" : "  "
+      } ${item}${resetColor}`
+    )
+  );
+};
 
-// Main function
+/**
+ * CLI entry point: fetches project data and allows users to select an environment group
+ */
+
 async function startCLI() {
-  let selectedIndex = 0;
-  const projectDetails = await getProjectId();
-  const envGroups = await fetchENVVariableForProject(projectDetails?.projectId);
-  const groupNames = envGroups?.groups?.map((group) => group?.groupName);
-  if (groupNames?.length) {
-    // Generate a random color for each item
-    const colorMap = groupNames.map((_, index) => colors[index]);
+  const projectDetails = await getProjectId(),
+    envGroups = await fetchENVVariableForProject(projectDetails?.projectId);
+  groupNames = envGroups?.groups?.map((group) => group?.groupName);
 
-    // Render the initial list
+  if (groupNames?.length) {
+    const colorMap = groupNames.map((_, i) => colors[i]);
     renderList(groupNames, selectedIndex, colorMap);
 
-    // Set up keypress handling
+    // Capture user keyboard inputs
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
 
     process.stdin.on("keypress", async (_, key) => {
-      if (key.name === "up") {
+      if (["up", "down"].includes(key.name)) {
         selectedIndex =
-          selectedIndex > 0 ? selectedIndex - 1 : groupNames.length - 1;
-        renderList(groupNames, selectedIndex, colorMap);
-      } else if (key.name === "down") {
-        selectedIndex =
-          selectedIndex < groupNames.length - 1 ? selectedIndex + 1 : 0;
+          key.name === "up"
+            ? selectedIndex > 0
+              ? selectedIndex - 1
+              : groupNames.length - 1
+            : selectedIndex < groupNames.length - 1
+            ? selectedIndex + 1
+            : 0;
         renderList(groupNames, selectedIndex, colorMap);
       } else if (key.name === "return") {
         console.clear();
@@ -268,8 +244,7 @@ async function startCLI() {
         const selectedENV = envGroups?.groups?.find(
           (group) => group?.groupName === groupNames[selectedIndex]
         );
-        const variables = selectedENV?.variables;
-        await readAndWriteFile(variables);
+        await readAndWriteFile(selectedENV?.variables);
         console.log("Successfully added env variables.");
         process.stdin.setRawMode(false);
         process.stdin.pause();
@@ -282,5 +257,5 @@ async function startCLI() {
   }
 }
 
-// Start the CLI tool
+// Start CLI execution
 startCLI();
