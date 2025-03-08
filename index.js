@@ -71,13 +71,13 @@ const stopSpinner = (spinner, msg, success = true) => {
 /**
  * Fetches environment variables from a local API based on the project ID
  */
-const fetchENVVariableForProject = async (projectId) => {
+const fetchENVVariableForProject = async (projectId, privateKey) => {
   console.log("\nChecking GitHub authorization...");
   const githubUserName = fetchGitHubSession();
   const spinner = startSpinner("Authenticating...");
   try {
     const resp = await fetch(
-      `http://127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}`
+      `http://127.0.0.1:3000/cli/groups/${githubUserName}/${projectId}/${privateKey}`
     );
     const data = await resp.json();
     stopSpinner(
@@ -215,8 +215,8 @@ const renderList = (list, selectedIndex, colorMap) => {
  */
 
 async function startCLI() {
-  const projectDetails = await getProjectId(),
-    envGroups = await fetchENVVariableForProject(projectDetails?.projectId);
+  const { projectId, varVaultPrivateKey } = await getProjectId(),
+    envGroups = await fetchENVVariableForProject(projectId, varVaultPrivateKey);
   groupNames = envGroups?.groups?.map((group) => group?.groupName);
 
   if (groupNames?.length) {
